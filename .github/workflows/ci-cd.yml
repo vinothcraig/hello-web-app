@@ -76,12 +76,23 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ec2-user
           key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            export AWS_REGION=us-east-1
-            export AWS_ACCOUNT_ID=869937525054
-            export ECR_REGISTRY=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-            aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-            docker pull ${ECR_REGISTRY}/hello-web-app:latest || docker pull nginx:alpine
-            docker stop hello-web-app || true
-            docker rm hello-web-app || true
-            docker run -d --name hello-web-app -p 80:80 ${ECR_REGISTRY}/hello-web-app:latest
+          envs: AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        script: |
+          export AWS_REGION=us-east-1
+          export AWS_ACCOUNT_ID=869937525054
+          export ECR_REGISTRY=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
+          mkdir -p ~/.aws
+          cat > ~/.aws/credentials << 'EOF'
+          [default]
+          aws_access_key_id = ${AWS_ACCESS_KEY_ID}
+          aws_secret_access_key = ${AWS_SECRET_ACCESS_KEY}
+          region = us-east-1
+          EOF
+          aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
+          docker pull ${ECR_REGISTRY}/hello-web-app:latest || docker pull nginx:alpine
+          docker stop hello-web-app || true
+          docker rm hello-web-app || true
+          docker run -d --name hello-web-app -p 80:80 ${ECR_REGISTRY}/hello-web-app:latest
