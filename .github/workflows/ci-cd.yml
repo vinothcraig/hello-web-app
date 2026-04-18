@@ -81,7 +81,7 @@ jobs:
             export AWS_ACCOUNT_ID=869937525054
             export ECR_REGISTRY=${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
             aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}
-            docker pull ${ECR_REGISTRY}/hello-web-app:latest
+            docker pull ${ECR_REGISTRY}/hello-web-app:latest || docker pull nginx:alpine
             docker stop hello-web-app || true
             docker rm hello-web-app || true
             docker run -d --name hello-web-app -p 80:80 ${ECR_REGISTRY}/hello-web-app:latest
